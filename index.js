@@ -2,16 +2,22 @@ const process = require('process');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-
+const { isPromise } = require('util/types');
 const I18N = require('@ladjs/i18n');
 const _ = require('lodash');
-const consolidate = require('consolidate');
-const debug = require('debug')('email-templates');
+const consolidate = require('@ladjs/consolidate');
 const getPaths = require('get-paths');
 const { convert } = require('html-to-text');
 const juice = require('juice');
 const nodemailer = require('nodemailer');
-const previewEmail = require('preview-email');
+
+let previewEmail;
+
+try {
+  previewEmail = require('preview-email');
+} catch {}
+
+const debug = util.debuglog('email-templates');
 
 // promise version of `juice.juiceResources`
 const juiceResources = (html, options) => {
@@ -92,7 +98,8 @@ class Email {
           tableElements: ['TABLE']
         },
         juiceResources: {
-          preserveImportant: true,
+          applyStyleTags: false,
+          removeStyleTags: false,
           webResources: {
             relativeTo: path.resolve('build'),
             images: false
@@ -245,7 +252,11 @@ class Email {
       if (locale !== locals.locale) i18n.setLocale(locals.locale);
     }
 
-    const res = await util.promisify(renderFn)(filePath, locals);
+    const res = await (isPromise(
+      Reflect.apply(renderFn, this, [filePath, locals])
+    )
+      ? renderFn(filePath, locals)
+      : util.promisify(renderFn)(filePath, locals));
     // transform the html with juice using remote paths
     // google now supports media queries
     // https://developers.google.com/gmail/design/reference/supported_css
@@ -336,6 +347,16 @@ class Email {
 
     if (this.config.preview) {
       debug('using `preview-email` to preview email');
+      if (typeof previewEmail !== 'function') {
+        // don't break production apps
+        // (in case someone upgrades major without reading changelog on GH releases)
+        const err = new TypeError(
+          'Optional dependency "preview-email" not installed, but required for "preview" option in "email-templates" usage (e.g. set "preview: false" or "npm install preview-email" to resolve)'
+        );
+        if (env === 'production') console.error(err);
+        else throw err;
+      }
+
       await (_.isObject(this.config.preview)
         ? previewEmail(message, this.config.preview)
         : previewEmail(message));

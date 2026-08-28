@@ -1,15 +1,14 @@
 # [**Email Templates**](https://github.com/forwardemail/email-templates)
 
-[![build status](https://travis-ci.com/forwardemail/email-templates.svg)](https://travis-ci.com/forwardemail/email-templates)
-[![code coverage](https://img.shields.io/codecov/c/github/forwardemail/email-templates.svg)](https://codecov.io/gh/forwardemail/email-templates)
+[![build status](https://github.com/forwardemail/email-templates/actions/workflows/ci.yml/badge.svg)](https://github.com/forwardemail/email-templates/actions/workflows/ci.yml)
 [![code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![made with lass](https://img.shields.io/badge/made_with-lass-95CC28.svg)](https://lass.js.org)
 [![license](https://img.shields.io/github/license/forwardemail/email-templates.svg)](LICENSE)
 
-> :heart: Love this project? Support <a href="https://github.com/niftylettuce" target="_blank">@niftylettuce's</a> [FOSS](https://en.wikipedia.org/wiki/Free_and_open-source_software) on <a href="https://patreon.com/niftylettuce" target="_blank">Patreon</a> or <a href="https://paypal.me/niftylettuce">PayPal</a> :unicorn:
+Create, [preview][preview-email] (browser/iOS Simulator), and send custom email templates for [Node.js][node].  Made for [Forward Email][forward-email] and [Lad][].
 
-Create, [preview][preview-email], and send custom email templates for [Node.js][node]. Highly configurable and supports automatic inline CSS, stylesheets, embedded images and fonts, and much more! Made for sending beautiful emails with [Lad][].
+> **Need to send emails that land in the inbox instead of spam folder? [Click here to learn how to send JavaScript contact forms and more with Node.js](https://forwardemail.net/docs/how-to-javascript-contact-forms-node-js)**
 
 
 ## Table of Contents
@@ -22,7 +21,6 @@ Create, [preview][preview-email], and send custom email templates for [Node.js][
   * [Attachments](#attachments)
   * [Automatic Inline CSS via Stylesheets](#automatic-inline-css-via-stylesheets)
   * [Render HTML and/or Text](#render-html-andor-text)
-  * [Cache Pug Templates](#cache-pug-templates)
   * [Localization](#localization)
   * [Text-Only Email (no HTML)](#text-only-email-no-html)
   * [Prefix Subject Lines](#prefix-subject-lines)
@@ -33,8 +31,15 @@ Create, [preview][preview-email], and send custom email templates for [Node.js][
   * [Absolute Path to Templates](#absolute-path-to-templates)
   * [Open Email Previews in Firefox](#open-email-previews-in-firefox)
 * [Options](#options)
+* [Tips](#tips)
+  * [Purge unused CSS](#purge-unused-css)
+  * [Optimized Pug Stylesheet Loading](#optimized-pug-stylesheet-loading)
 * [Plugins](#plugins)
 * [Breaking Changes](#breaking-changes)
+  * [v13.0.0](#v1300)
+  * [v12.0.0](#v1200)
+  * [v11.0.0](#v1100)
+  * [v10.0.0](#v1000)
   * [v9.0.0](#v900)
   * [v8.0.0](#v800)
   * [v7.0.0](#v700)
@@ -42,7 +47,6 @@ Create, [preview][preview-email], and send custom email templates for [Node.js][
   * [v5.0.0](#v500)
   * [v4.0.0](#v400)
   * [v3.0.0](#v300)
-* [Tip](#tip)
 * [Related](#related)
 * [Contributors](#contributors)
 * [License](#license)
@@ -50,24 +54,18 @@ Create, [preview][preview-email], and send custom email templates for [Node.js][
 
 ## Install
 
-> By default we recommend [pug][] for your template engine, but you can use [any template engine][supported-engines].
+> By default we recommend [pug][] for your template engine, but you can use [any template engine][supported-engines].  Note that [preview-email][] is an optional dependency and is extremely helpful for rendering development previews of your emails automatically in your browser.
 
 [npm][]:
 
 ```sh
-npm install email-templates pug
-```
-
-[yarn][]:
-
-```sh
-yarn add email-templates pug
+npm install email-templates preview-email pug
 ```
 
 
 ## Preview
 
-We've added [preview-email][] by default to this package!
+We've added [preview-email][] by default to this package.  This package allows you to preview emails in the browser and in the iOS Simulator.
 
 This means that (by default) in the development environment (e.g. `NODE_ENV=development`) your emails will be rendered to the tmp directory for you and automatically opened in the browser.
 
@@ -82,10 +80,10 @@ See the example below for [Open Email Previews in Firefox](#open-email-previews-
 
 #### Environment Flag
 
-If you run into any issues with configuration, files, templates, locals, etc, then you can use the `DEBUG` environment flag:
+If you run into any issues with configuration, files, templates, locals, etc, then you can use the `NODE_DEBUG` environment flag:
 
 ```sh
-DEBUG=email-templates node app.js
+NODE_DEBUG=email-templates node app.js
 ```
 
 This will output to the console all debug statements in our codebase for this package.
@@ -115,7 +113,7 @@ email
 
 ### Basic
 
-> You can swap the `transport` option with a [Nodemailer transport][nodemailer-transport] configuration object or transport instance. We highly recommend using [Postmark][] for your transport (it's the default in [Lad][]).
+> You can swap the `transport` option with a [Nodemailer transport][nodemailer-transport] configuration object or transport instance. We highly recommend using [Forward Email][forward-email] for your transport (it's the default in [Lad][]).
 >
 > If you want to send emails in `development` or `test` environments, set `options.send` to `true`.
 
@@ -124,7 +122,7 @@ const Email = require('email-templates');
 
 const email = new Email({
   message: {
-    from: 'niftylettuce@gmail.com'
+    from: 'test@example.com'
   },
   // uncomment below to send emails in development/test env:
   // send: true
@@ -184,7 +182,7 @@ const Email = require('email-templates');
 
 const email = new Email({
   message: {
-    from: 'niftylettuce@gmail.com',
+    from: 'test@example.com',
     attachments: [
       {
         filename: 'text1.txt',
@@ -215,7 +213,7 @@ const Email = require('email-templates');
 
 const email = new Email({
   message: {
-    from: 'niftylettuce@gmail.com'
+    from: 'test@example.com'
   },
   transport: {
     jsonTransport: true
@@ -250,7 +248,7 @@ Simply include the path or URL to the stylesheet in your template's `<head>`:
 link(rel="stylesheet", href="/css/app.css", data-inline)
 ```
 
-This will look for the file `/css/app.css` in the `build/` folder.
+This will look for the file `/css/app.css` in the `build/` folder.  Also see [Optimized Pug Stylesheet Loading](#optimized-pug-stylesheet-loading) below.
 
 If this asset is in another folder, then you will need to modify the default options when creating an `Email` instance:
 
@@ -263,7 +261,8 @@ const email = new Email({
     tableElements: ['TABLE']
   },
   juiceResources: {
-    preserveImportant: true,
+    // set this to `true` (since as of v11 it is `false` by default)
+    applyStyleTags: true, // <------------ you need to set this to `true`
     webResources: {
       //
       // this is the relative directory to your CSS/image assets
@@ -330,7 +329,6 @@ email
   .render({
     path: 'mars/html',
     juiceResources: {
-      preserveImportant: true,
       webResources: {
         // view folder path, it will get css from `mars/style.css`
         relativeTo: path.resolve('mars')
@@ -393,28 +391,18 @@ Promise
   .catch(console.error);
 ```
 
-### Cache Pug Templates
-
-Out of the box, templates are cached as they are compiled (e.g. as emails are sent, the template they're using is cached).  However these templates are not cached in-advance, so the first emails sent of each template will be slower to send.
-
-We strongly suggest to pre-cache your templates with [cache-pug-templates][] (if you're using the default [Pug][] template engine).
-
-If you do not do this, then your Pug templates will re-compile and re-cache every time you deploy new code and restart your app.
-
-Note that you will need to specify the `views` option to your `new CachePugTemplates({ views: '...' });` instance, with `views` being a file path (Array or String) to your email template directory.  See [cache-pug-templates][] documentation for more information.
-
 ### Localization
 
 All you need to do is simply pass an [i18n][] configuration object as `config.i18n` (or an empty one as this example shows to use defaults).
 
-> Don't want to handle localization and translation yourself?  Just use [Lad][lad] – it's built in and uses [mandarin][] (with automatic Google Translate support) under the hood!
+> Don't want to handle localization and translation yourself?  Just use [Lad][lad] – it's built in and uses [mandarin][] (with automatic Google Translate support) under the hood.
 
 ```js
 const Email = require('email-templates');
 
 const email = new Email({
   message: {
-    from: 'niftylettuce@gmail.com'
+    from: 'test@example.com'
   },
   transport: {
     jsonTransport: true
@@ -533,7 +521,7 @@ const Email = require('email-templates');
 
 const email = new Email({
   message: {
-    from: 'niftylettuce@gmail.com'
+    from: 'test@example.com'
   },
   transport: {
     jsonTransport: true
@@ -572,7 +560,7 @@ const env = process.env.NODE_ENV || 'development';
 
 const email = new Email({
   message: {
-    from: 'niftylettuce@gmail.com'
+    from: 'test@example.com'
   },
   transport: {
     jsonTransport: true
@@ -594,7 +582,7 @@ const Email = require('email-templates');
 
 const email = new Email({
   message: {
-    from: 'niftylettuce@gmail.com'
+    from: 'test@example.com'
   },
   transport: {
     jsonTransport: true
@@ -633,12 +621,6 @@ email
    npm install ejs
    ```
 
-   [yarn][]:
-
-   ```sh
-   yarn add ejs
-   ```
-
 2. Set the extension in options and send an email
 
    ```js
@@ -646,7 +628,7 @@ email
 
    const email = new Email({
      message: {
-       from: 'niftylettuce@gmail.com'
+       from: 'test@example.com'
      },
      transport: {
        jsonTransport: true
@@ -672,12 +654,12 @@ const Email = require('email-templates');
 
 const email = new Email({
   message: {
-    from: 'niftylettuce@gmail.com',
+    from: 'test@example.com',
     headers: {
       'X-Some-Custom-Thing': 'Some-Value'
     },
     list: {
-      unsubscribe: 'https://niftylettuce.com/unsubscribe'
+      unsubscribe: 'https://example.com/unsubscribe'
     }
   },
   transport: {
@@ -788,13 +770,13 @@ For a list of all available options and defaults [view the configuration object]
   * `options` (Object)
     * `extension` (String) - defaults to `'pug'`, and is the default file extension for templates
     * `map` (Object) - a template file extension mapping, defaults to `{ hbs: 'handlebars', njk: 'nunjucks' }` (this is useful if you use different file extension naming conventions)
-    * `engineSource` (Object) - the default template engine source, defaults to [consolidate][]
+    * `engineSource` (Object) - the default template engine source, defaults to [@ladjs/consolidate][consolidate]
   * `locals` (Object) - locals to pass to templates for rendering
     * `cache` (Boolean) - defaults to `false` for `development` and `test` environments, and `true` for all others (via `process.env.NODE_ENV`), whether or not to cache templates
     * `pretty` (Boolean) - defaults to `true`, but is automatically set to `false` for subject templates and text-based emails
 * `message` (Object) - default [Nodemailer message object][nodemailer-message-object] for messages to inherit (defaults to an empty object `{}`)
 * `send` (Boolean) - whether or not to send emails, defaults to `false` for `development` and `test` environments, and `true` for all others (via `process.env.NODE_ENV`) (**NOTE: IF YOU ARE NOT USING `NODE_ENV` YOU WILL NEED TO MANUALLY SET THIS TO `true`**)
-* `preview` (Boolean or Object) - whether or not to preview emails using [preview-email][], defaults to `false` unless the environment is `development` (via `process.env.NODE_ENV`)
+* `preview` (Boolean or Object) - whether or not to preview emails using [preview-email][], defaults to `false` unless the environment is `development` (via `process.env.NODE_ENV`) – if you wish to disable the iOS Simulator then pass `{ openSimulator: false }`
 * `i18n` (Boolean or Object) - translation support for email templates, this accepts an I18N configuration object (defaults to `false`, which means it is disabled) which is passed along to [@ladjs/i18n][i18n] – see [Localization](#localization) example for more insight
 * `render` (Function) - defaults to a stable function that accepts two argument, `view` (String) and `locals` (Object) - you should not need to set this unless you have a need for custom rendering (see [Custom Rendering (e.g. from a MongoDB database)](#custom-rendering-eg-from-a-mongodb-database))
 * `customRender` (Boolean) - defaults to `false`, unless you pass your own `render` function, and in that case it will be automatically set to `true`
@@ -804,12 +786,37 @@ For a list of all available options and defaults [view the configuration object]
 * `subjectPrefix` (Boolean or String) - defaults to `false`, but if set to a string it will use that string as a prefix for your emails' subjects
 * `juice` (Boolean) - whether or not to use [juice][] when rendering templates (defaults to `true`) (note that if you have a custom rendering function you will need to implement [juice][] in it yourself)
 * `juiceResources` (Object) - options to pass to `juice.juiceResources` method (only used if `juice` option is set to `true`, see [juice's][juice] API for more information
-  * `preserveImportant` (Boolean) - defaults to `true`
+  * `applyStyleTags` (Boolean) - defaults to `false` (as of v11, since modern browsers now support `<style>` tag in `<head>` section)
+  * `removeStyleTags` (Boolean) - defaults to `false` (as of v11, since modern browsers now support `<style>` tag in `<head>` section)
   * `webResources` (Object) - an options object that will be passed to [web-resource-inliner][]
     * `relativeTo` (String) - defaults to the current working directory's "build" folder via `path.resolve('build')` (**NOTE: YOU SHOULD MODIFY THIS PATH TO WHERE YOUR BUILD/ASSETS FOLDER IS**)
     * `images` (Boolean or Number) - defaults to `false`, and is  whether or not to inline images unless they have an exclusion attribute (see [web-resource-inliner][] for more insight), if it is set to a Number then that is used as the KB threshold
 * `transport` (Object) - a transport configuration object or a Nodemailer transport instance created via `nodemailer.createTransport`, defaults to an empty object `{}`, see [Nodemailer transports][nodemailer-transports] documentation for more insight
 * `getPath` (Function) - a function that returns the path to a template file, defaults to `function (type, template) { return path.join(template, type); }`, and accepts three arguments `type`, `template`, and `locals`
+
+
+## Tips
+
+### Purge unused CSS
+
+See the `gulpfile.js` file and `email` directory in the [Forward Email][forward-email-code] codebase for insight as to how to use `purge-css` across your email templates.
+
+### Optimized Pug Stylesheet Loading
+
+Note that if you're using [pug][], you can use the following pattern to optimize compile time for rendering in your email layout.
+
+```diff
+doctype html
+html
+  head
+-    link(rel='stylesheet', href='style.css', data-inline)
++    style
++      include style.css
+  body
+    p Hello
+```
+
+This makes use of pug [includes](https://pugjs.org/language/includes.html) – which saves compilation time for rendering (since [web-resource-inliner][] will not have to fetch the external stylesheet).
 
 
 ## Plugins
@@ -824,7 +831,6 @@ When doing so (as of v4.0.2+), you will need to adjust your `email-templates` co
 const email = new Email({
   // ...
   juiceResources: {
-    preserveImportant: true,
     webResources: {
       relativeTo: path.resolve('build'),
       images: true // <--- set this as `true`
@@ -833,15 +839,30 @@ const email = new Email({
 });
 ```
 
-We also highly recommend to add to your default `config.locals` the following:
-
-* [custom-fonts-in-emails][] - render any font in emails as an image w/retina support (no more Photoshop or Sketch exports!)
-* [font-awesome-assets][] - render any [Font Awesome][fa] icon as an image in an email w/retina support (no more Photoshop or Sketch exports!)
-
 
 ## Breaking Changes
 
 See the [Releases](https://github.com/forwardemail/email-templates/releases) page for an up to date changelog.
+
+### v13.0.0
+
+This package now requires Node v18+.
+
+### v12.0.0
+
+The `preview-email` dependency is now an optional dependency.  You will need to `npm install preview-email` or set `preview: false`, otherwise an error will be thrown in non-production environments and `console.error` in production environments if `preview` option is a truthy value.  The default value for `preview` is `preview: process.NODE_ENV === 'development'`.
+
+### v11.0.0
+
+This package no longer inlines stylesheets by default and preserves `<style>` tags in the `<head>` (see [Options](#options)).
+
+A majority of email clients support `<style>` tags in the `<head>` section – and inlining CSS is no longer necessary.
+
+See [1](https://www.caniemail.com/features/html-style/), [2](https://www.campaignmonitor.com/css/style-element/style-in-head/), and [3](https://caniuse.email/) as references.
+
+### v10.0.0
+
+This package now requires Node v14+.
 
 ### v9.0.0
 
@@ -871,7 +892,7 @@ We upgraded `preview-email` to `v2.0.0`, which supports stream attachments, and 
 * Performance should be significantly improved as the rendering of subject, html, and text parts now occurs asynchronously in parallel (previously it was in series and had blocking lookup calls).
 * We removed [bluebird][] and replaced it with a lightweight alternative [pify][] (since all we were using was the `Promise.promisify` method from `bluebird` as well).
 * This package now only supports Node v8.x+ (due to [preview-email][]'s [open][] dependency requiring it).
-* Configuration for the `preview` option has slightly changed, which now allows you to [specify a custom template and stylesheets](https://github.com/niftylettuce/preview-email#custom-preview-template-and-stylesheets) for preview rendering.
+* Configuration for the `preview` option has slightly changed, which now allows you to [specify a custom template and stylesheets](https://github.com/forwardemail/preview-email#custom-preview-template-and-stylesheets) for preview rendering.
 
   > If you were using a custom `preview` option before, you will need to change it slightly:
 
@@ -940,18 +961,14 @@ See v5.0.0 above
 7. If you wish to send emails in development or test environment (disabled by default), set `options.send` to `true`.
 
 
-## Tip
-
-Instead of having to configure this for yourself, you could just use [Lad][] instead.
-
-
 ## Related
 
+* [forward-email][] - Free, encrypted, and open-source email forwarding service for custom domains
+* [custom-fonts-in-emails][] - render any font in emails as an image w/retina support (no more Photoshop or Sketch exports)
+* [font-awesome-assets][] - render any [Font Awesome][fa] icon as an image in an email w/retina support (no more Photoshop or Sketch exports!)
 * [lad][] - Scaffold a [Koa][] webapp and API framework for [Node.js][node]
 * [lass][] - Scaffold a modern boilerplate for [Node.js][node]
 * [cabin][] - Logging and analytics solution for [Node.js][node], [Lad][], [Koa][], and [Express][]
-* [forward-email][] - Free, encrypted, and open-source email forwarding service for custom domains
-* [lipo][] - Free image manipulation API service built on top of [Sharp][]
 
 
 ## Contributors
@@ -972,11 +989,9 @@ Instead of having to configure this for yourself, you could just use [Lad][] ins
 
 [npm]: https://www.npmjs.com/
 
-[yarn]: https://yarnpkg.com/
-
 [pug]: https://pugjs.org
 
-[supported-engines]: https://github.com/tj/consolidate.js/#supported-template-engines
+[supported-engines]: https://github.com/ladjs/consolidate/#engines
 
 [nodemailer]: https://nodemailer.com/plugins/
 
@@ -994,13 +1009,9 @@ Instead of having to configure this for yourself, you could just use [Lad][] ins
 
 [nodemailer-transport]: https://nodemailer.com/transports/
 
-[postmark]: https://postmarkapp.com/
-
 [ejs]: http://ejs.co/
 
-[cache-pug-templates]: https://github.com/ladjs/cache-pug-templates
-
-[preview-email]: https://github.com/niftylettuce/preview-email
+[preview-email]: https://github.com/forwardemail/preview-email
 
 [attachments]: https://nodemailer.com/message/attachments/
 
@@ -1010,19 +1021,15 @@ Instead of having to configure this for yourself, you could just use [Lad][] ins
 
 [forward-email]: https://forwardemail.net
 
-[lipo]: https://lipo.io
-
 [koa]: https://koajs.com/
-
-[sharp]: http://sharp.dimens.io/
 
 [express]: https://expressjs.com
 
 [open-options]: https://github.com/sindresorhus/open#options
 
-[mandarin]: https://github.com/niftylettuce/mandarin
+[mandarin]: https://github.com/ladjs/mandarin
 
-[consolidate]: https://github.com/tj/consolidate.js
+[consolidate]: https://github.com/ladjs/consolidate
 
 [nodemailer-message-object]: https://nodemailer.com/message/
 
@@ -1039,3 +1046,5 @@ Instead of having to configure this for yourself, you could just use [Lad][] ins
 [pify]: https://github.com/sindresorhus/pify
 
 [open]: https://github.com/sindresorhus/open
+
+[forward-email-code]: https://github.com/forwardemail/forwardemail.net
